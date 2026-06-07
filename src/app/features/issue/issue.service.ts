@@ -273,20 +273,20 @@ export class IssueService {
       allExistingIssueIds,
     );
 
+    const existingIssueIds = new Set(allExistingIssueIds.map(String));
+
     const issuesToAdd: IssueDataReduced[] = potentialIssuesToAdd.filter(
-      (issue: IssueDataReduced): boolean =>
-        !(allExistingIssueIds as string[]).includes(issue.id as string),
+      (issue: IssueDataReduced): boolean => !existingIssueIds.has(String(issue.id)),
     );
 
-    issuesToAdd.forEach((issue: IssueDataReduced) => {
-      // TODO add correct project id
-      this.addTaskFromIssue({
+    for (const issue of issuesToAdd) {
+      await this.addTaskFromIssue({
         issueDataReduced: issue,
         issueProviderId,
         issueProviderKey: providerKey,
         isAddToBacklog: true,
       });
-    });
+    }
 
     if (issuesToAdd.length === 1) {
       const issueTitle = this._getAddTaskData(providerKey, issuesToAdd[0]).title;

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
 import { first, map } from 'rxjs/operators';
-import { Task } from 'src/app/features/tasks/task.model';
+import { Task, TaskCopy } from 'src/app/features/tasks/task.model';
 import { BaseIssueProviderService } from '../../base/base-issue-provider.service';
 import { IssueData, SearchResultItem } from '../../issue.model';
 import { OpenProjectApiService } from './open-project-api.service';
@@ -65,6 +65,33 @@ export class OpenProjectCommonInterfacesService extends BaseIssueProviderService
       dueDay: issue.startDate || undefined,
       issueLastUpdated: new Date(issue.updatedAt).getTime(),
       ...(parsedEstimate > 0 ? { timeEstimate: parsedEstimate } : {}),
+    };
+  }
+
+  override async getFreshDataForIssueTask(task: Task): Promise<{
+    taskChanges: Partial<TaskCopy>;
+    issue: IssueData;
+    issueTitle: string;
+  } | null> {
+    const update = await super.getFreshDataForIssueTask(task);
+
+    if (!update) {
+      return null;
+    }
+
+    const issue = update.issue as OpenProjectWorkPackage;
+
+    return {
+      ...update,
+      taskChanges: {
+        ...update.taskChanges,
+
+        dueDay: issue.startDate || undefined,
+        dueWithTime: undefined,
+
+        deadlineDay: issue.dueDate || undefined,
+        deadlineWithTime: undefined,
+      },
     };
   }
 
